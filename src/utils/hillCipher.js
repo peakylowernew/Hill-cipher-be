@@ -32,7 +32,7 @@ export function inverseMatrixMod26(matrix, detInverse) {
     }
     return adjugate;
 }
-
+// ma hoa
 export function encryptText(text, keyMatrix) {
     if (!text || !keyMatrix || !Array.isArray(keyMatrix)) {
         throw new Error("Dữ liệu đầu vào không hợp lệ!");
@@ -65,14 +65,16 @@ export function encryptText(text, keyMatrix) {
 
     return encryptedVector.map(num => String.fromCharCode(num + 65)).join("");
 }
-
+// giai ma
 export function decryptText(text, keyMatrix) {
     try {
         const n = keyMatrix.length;
         const det = determinantMod26(keyMatrix);
         const detInverse = modInverse(det, 26);
+
         if (det === 0 || detInverse === null) {
-            throw new Error("Ma trận khóa không khả nghịch trong modulo 26!");
+            console.log("Ma trận khóa không khả nghịch trong modulo 26!");
+            return null;
         }
 
         const inverseMatrix = inverseMatrixMod26(keyMatrix, detInverse);

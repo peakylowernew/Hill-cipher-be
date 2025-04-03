@@ -13,8 +13,11 @@ export function encrypt(req, res) {
             return res.status(400).json({ error: "Ma trận khóa phải là ma trận vuông." });
         }
 
-        const encryptedText = encryptText(text, keyMatrix);
-        res.json({ encryptedText });
+        // Gọi hàm mã hóa và lấy các bước
+        const { encryptedText, steps } = encryptText(text, keyMatrix);
+
+        // Trả về cả kết quả mã hóa và các bước mã hóa
+        res.json({ encryptedText, steps });
     } catch (error) {
         console.error("Lỗi mã hóa:", error);
         res.status(500).json({ error: "Lỗi máy chủ!" });
@@ -34,8 +37,18 @@ export function decrypt(req, res) {
             return res.status(400).json({ error: "Ma trận khóa phải là ma trận vuông." });
         }
 
-        const decryptedText = decryptText(text, keyMatrix);
-        res.json({ decryptedText });
+        // Bắt đầu giải mã và lưu lại các bước
+        const { decryptedText, steps } = decryptText(text, keyMatrix);
+        
+        // Nếu có lỗi trong quá trình giải mã
+        if (!decryptedText) {
+            return res.status(500).json({ error: "Lỗi giải mã!" });
+        }
+
+        res.json({ 
+            decryptedText,
+            steps // Trả về các bước tính toán chi tiết
+        });
     } catch (error) {
         console.error("Lỗi giải mã:", error);
         res.status(500).json({ error: "Lỗi máy chủ!" });

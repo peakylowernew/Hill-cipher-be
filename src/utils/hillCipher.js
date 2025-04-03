@@ -45,14 +45,23 @@ export function encryptText(text, keyMatrix) {
 
     let textVector = text.toUpperCase().split("").map(ch => ch.charCodeAt(0) - 65);
     while (textVector.length % n !== 0) {
-        textVector.push(23);
+        textVector.push(23); // Pad with X (23)
     }
 
     let encryptedVector = [];
+    let steps = [];  // Dùng để lưu các bước mã hóa
+
     for (let i = 0; i < textVector.length; i += n) {
         let block = textVector.slice(i, i + n);
         let encryptedBlock = new Array(n).fill(0);
 
+        // Lưu lại ma trận khối trước khi mã hóa
+        steps.push({
+            step: `Khối văn bản: [${block.join(", ")}]`,
+            block
+        });
+
+        // Thực hiện phép nhân ma trận
         for (let row = 0; row < n; row++) {
             for (let col = 0; col < n; col++) {
                 encryptedBlock[row] += keyMatrix[row][col] * block[col];
@@ -60,39 +69,56 @@ export function encryptText(text, keyMatrix) {
             encryptedBlock[row] = encryptedBlock[row] % 26;
         }
 
+        // Lưu lại kết quả sau khi mã hóa
+        steps.push({
+            step: `Kết quả sau mã hóa: [${encryptedBlock.join(", ")}]`,
+            encryptedBlock
+        });
+
         encryptedVector.push(...encryptedBlock);
     }
 
-    return encryptedVector.map(num => String.fromCharCode(num + 65)).join("");
+    return { encryptedText: encryptedVector.map(num => String.fromCharCode(num + 65)).join(""), steps };
 }
+
 // giai ma
 export function decryptText(text, keyMatrix) {
+    const steps = []; // Lưu các bước tính toán
     try {
         const n = keyMatrix.length;
         const det = determinantMod26(keyMatrix);
         const detInverse = modInverse(det, 26);
 
+        steps.push(`Determinant of key matrix: ${det}`);
+        steps.push(`Inverse of determinant mod 26: ${detInverse}`);
+
         if (det === 0 || detInverse === null) {
             console.log("Ma trận khóa không khả nghịch trong modulo 26!");
-            return null;
+            return { decryptedText: null, steps };
         }
 
         const inverseMatrix = inverseMatrixMod26(keyMatrix, detInverse);
+        steps.push(`Inverse of key matrix: ${JSON.stringify(inverseMatrix)}`);
+
         if (!inverseMatrix) {
             throw new Error("Không thể tính nghịch đảo của ma trận!");
         }
 
-        return hillCipherDecrypt(text, inverseMatrix);
+        const decryptedText = hillCipherDecrypt(text, inverseMatrix, steps);
+
+        return { decryptedText, steps };
     } catch (error) {
         console.error("Lỗi giải mã:", error);
-        return null;
+        return { decryptedText: null, steps };
     }
 }
 
-export function hillCipherDecrypt(text, inverseMatrix) {
+export function hillCipherDecrypt(text, inverseMatrix, steps) {
     const n = inverseMatrix.length;
     const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     text = text.toUpperCase().replace(/[^A-Z]/g, "");
+
+    steps.push(`Text to be decrypted (uppercased and cleaned): ${text}`);
 
     let decryptedText = "";
     for (let i = 0; i < text.length; i += n) {
@@ -100,6 +126,8 @@ export function hillCipherDecrypt(text, inverseMatrix) {
         for (let j = 0; j < n; j++) {
             vector.push(alphabet.indexOf(text[i + j] || "X"));
         }
+
+        steps.push(`Vector for block ${text.slice(i, i + n)}: ${JSON.stringify(vector)}`);
 
         let resultVector = new Array(n).fill(0);
         for (let row = 0; row < n; row++) {
@@ -109,8 +137,11 @@ export function hillCipherDecrypt(text, inverseMatrix) {
             resultVector[row] = ((resultVector[row] % 26) + 26) % 26;
         }
 
+        steps.push(`Decrypted vector: ${JSON.stringify(resultVector)}`);
+
         decryptedText += resultVector.map(num => alphabet[num]).join("");
     }
 
+    steps.push(`Final decrypted text: ${decryptedText}`);
     return decryptedText;
 }

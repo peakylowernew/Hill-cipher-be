@@ -1,5 +1,8 @@
 import admin from "../config/firebaseConfig.js";
 
+// import { checkFirebaseConnection } from "../config/firebase.js";
+
+
 export async function authenticateUser(req, res, next) {
   const token = req.headers.authorization?.split("Bearer ")[1];
   if (!token) {

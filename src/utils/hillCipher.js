@@ -1,57 +1,53 @@
-function modInverse(a, m) {
-    // Hàm tính nghịch đảo mod m (modular inverse)
-    a = a % m;
+//Tính định thức bằng phương pháp đệ quy.
+export function determinantMod26(matrix) {
+    const n = matrix.length;
+    if (n === 1) return matrix[0][0] % 26;
+    
+    let det = 0;
+    for (let i = 0; i < n; i++) {
+        const subMatrix = matrix.slice(1).map(row => row.filter((_, colIndex) => colIndex !== i));
+        det += ((i % 2 === 0 ? 1 : -1) * matrix[0][i] * determinantMod26(subMatrix)) % 26;
+    }
+    return (det + 26) % 26;
+}
+
+export function modInverse(a, m) {
+    a = ((a % m) + m) % m;
     for (let x = 1; x < m; x++) {
         if ((a * x) % m === 1) return x;
     }
-    return -1;  // Nếu không có nghịch đảo
+    return null;
 }
-
-function calculateMatrixInverse(matrix) {
-    // Hàm tính ma trận nghịch đảo
+// Tính ma trận nghịch đảo bằng ma trận phần bù đại số và chuyển vị.
+export function inverseMatrixMod26(matrix) {
     const n = matrix.length;
-    const det = determinant(matrix);
-    if (det === 0) return null;  // Ma trận không khả nghịch
+    const det = determinantMod26(matrix);
+    const detInverse = modInverse(det, 26);
+    if (det === 0 || detInverse === null) return null;
 
-    const adjugate = adjugateMatrix(matrix);
-    const invDet = modInverse(det, 26);  // Tính nghịch đảo của định thức mod 26
-    const inverseMatrix = adjugate.map(row =>
-        row.map(value => (value * invDet) % 26)  // Nhân từng phần tử với nghịch đảo của định thức
-    );
-
-    return inverseMatrix;
-}
-
-function determinant(matrix) {
-    // Tính định thức của ma trận
-    const n = matrix.length;
-    if (n === 1) return matrix[0][0];
-    if (n === 2) return matrix[0][0] * matrix[1][1] - matrix[0][1] * matrix[1][0];
-
-    let det = 0;
+    const cofactorMatrix = Array(n).fill(null).map(() => Array(n).fill(0));
     for (let i = 0; i < n; i++) {
-        let subMatrix = matrix.slice(1).map(row => row.filter((_, index) => index !== i));
-        det += ((i % 2 === 0 ? 1 : -1) * matrix[0][i] * determinant(subMatrix));
-    }
-    return det;
-}
-
-function adjugateMatrix(matrix) {
-    // Tính ma trận phụ (adjugate matrix)
-    const n = matrix.length;
-    let adj = [];
-    for (let i = 0; i < n; i++) {
-        adj[i] = [];
         for (let j = 0; j < n; j++) {
-            let subMatrix = matrix
+            const subMatrix = matrix
                 .filter((_, rowIndex) => rowIndex !== i)
                 .map(row => row.filter((_, colIndex) => colIndex !== j));
-            adj[i][j] = ((i + j) % 2 === 0 ? 1 : -1) * determinant(subMatrix);
+            
+            cofactorMatrix[i][j] = ((determinantMod26(subMatrix) * ((i + j) % 2 === 0 ? 1 : -1)) + 26) % 26;
         }
     }
-    return adj;
+    
+    const adjugateMatrix = transposeMatrix(cofactorMatrix);
+    return adjugateMatrix.map(row => row.map(num => (num * detInverse) % 26));
 }
-// ma hoa
+// Chuyển vị ma trận để hỗ trợ tính adjugate.
+function transposeMatrix(matrix) {
+    return matrix[0].map((_, colIndex) => matrix.map(row => row[colIndex]));
+}
+
+function mod26(value) {
+    return ((value % 26) + 26) % 26;
+}
+// Mã hóa văn bản
 export function encryptText(text, keyMatrix) {
     if (!text || !keyMatrix || !Array.isArray(keyMatrix)) {
         throw new Error("Dữ liệu đầu vào không hợp lệ!");
@@ -64,13 +60,14 @@ export function encryptText(text, keyMatrix) {
 
     let textVector = text.toUpperCase().split("").map(ch => ch.charCodeAt(0) - 65);
     while (textVector.length % n !== 0) {
-        textVector.push(23); // Pad with X (23)
+        textVector.push(23); // Thêm ký tự X (23) vào nếu thiếu để tạo thành khối
     }
 
     let encryptedVector = [];
     let steps = [];  // Dùng để lưu các bước mã hóa
-    let blocks = [];    
-    // Xuất toàn bộ khối văn bản gốc trước
+    let blocks = [];
+
+    // Xuất toàn bộ khối văn bản gốc
     for (let i = 0; i < textVector.length; i += n) {
         let block = textVector.slice(i, i + n);
         let blockChars = block.map(num => String.fromCharCode(num + 65));
@@ -90,21 +87,21 @@ export function encryptText(text, keyMatrix) {
         let encryptedBlock = new Array(n).fill(0);
         let stepDetails = []; // Dùng để lưu từng bước nhân và cộng
         const blockMatrix = [];
+
         blockMatrix.push(`<strong>KHÓA:</strong> [${keyMatrix.join(" | ")}]`);
-        // Nhân ma trận để mã hóa
+
+        // Nhân ma trận khóa với khối văn bản để mã hóa
         for (let row = 0; row < n; row++) {
             let sum = 0;
             let calculationSteps = [];
-            let keycol= [];
 
             for (let col = 0; col < n; col++) {
                 let product = keyMatrix[row][col] * block[col];
                 sum += product;
                 calculationSteps.push(`(${keyMatrix[row][col]} * ${block[col]})`);
-                // keycol.push(`(${keyMatrix[col]})`);
             }
-            // blockMatrix.push(`K: [${keycol.join(" | ")}]`);
-            encryptedBlock[row] = sum % 26; // Giới hạn trong 26 chữ cái
+
+            encryptedBlock[row] = mod26(sum); // Giới hạn trong phạm vi 26 chữ cái
             stepDetails.push(`- <strong>HÀNG ${row + 1}:</strong> ${calculationSteps.join(" + ")} = ${sum} mod 26 = ${encryptedBlock[row]}`);
         }
 
@@ -122,19 +119,14 @@ export function encryptText(text, keyMatrix) {
         encryptedVector.push(...encryptedBlock);
     }
 
-    return { 
+    return {
         originalText: text,
         encryptedText: encryptedVector.map(num => String.fromCharCode(num + 65)).join(""),
         steps
     };
 }
 
-// giai ma
-// Hàm để đảm bảo kết quả mod 26 luôn là dương
-function mod26(value) {
-    return ((value % 26) + 26) % 26;
-}
-
+// Giải mã văn bản
 export function decryptText(text, keyMatrix) {
     if (!text || !keyMatrix || !Array.isArray(keyMatrix)) {
         throw new Error("Dữ liệu đầu vào không hợp lệ!");
@@ -145,9 +137,10 @@ export function decryptText(text, keyMatrix) {
         throw new Error("Ma trận khóa không hợp lệ! Phải là ma trận vuông.");
     }
 
-    // Tính ma trận nghịch đảo của khóa
-    const inverseKeyMatrix = calculateMatrixInverse(keyMatrix);
-    if (!inverseKeyMatrix) {
+    // Tính ma trận nghịch đảo của khóa sử dụng các hàm đã có
+    const inverseKeyMatrix = inverseMatrixMod26(keyMatrix);
+
+    if (!inverseKeyMatrix) {``
         throw new Error("Ma trận khóa không khả nghịch!");
     }
 
@@ -171,11 +164,12 @@ export function decryptText(text, keyMatrix) {
         });
     }
 
-    // Thực hiện giải mã sau khi xuất toàn bộ khối văn bản
+    // Thực hiện giải mã
     for (let { block, blockChars } of blocks) {
         let decryptedBlock = new Array(n).fill(0);
-        let stepDetails = []; // Dùng để lưu từng bước nhân và cộng
+        let stepDetails = [];
         const blockMatrix = [];
+
         blockMatrix.push(`<strong>KHÓA NGHỊCH:</strong> [${inverseKeyMatrix.join(" | ")}]`);
 
         // Nhân ma trận nghịch đảo của khóa để giải mã
@@ -189,13 +183,13 @@ export function decryptText(text, keyMatrix) {
                 calculationSteps.push(`(${inverseKeyMatrix[row][col]} * ${block[col]})`);
             }
 
-            decryptedBlock[row] = mod26(sum);  // Sử dụng hàm mod26 để đảm bảo kết quả không âm
+            decryptedBlock[row] = ((sum % 26) + 26) % 26;
             stepDetails.push(`- <strong>HÀNG ${row + 1}:</strong> ${calculationSteps.join(" + ")} = ${sum} mod 26 = ${decryptedBlock[row]}`);
         }
 
         let decryptedChars = decryptedBlock.map(num => String.fromCharCode(num + 65));
 
-        // Lưu kết quả sau giải mã
+        // Lưu kết quả giải mã
         steps.push({
             key: blockMatrix,
             details: stepDetails,
@@ -207,7 +201,7 @@ export function decryptText(text, keyMatrix) {
         decryptedVector.push(...decryptedBlock);
     }
 
-    return { 
+    return {
         originalText: text,
         decryptedText: decryptedVector.map(num => String.fromCharCode(num + 65)).join(""),
         steps

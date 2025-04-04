@@ -19,7 +19,7 @@ export function modInverse(a, m) {
     return null;
 }
 // Tính ma trận nghịch đảo bằng ma trận phần bù đại số và chuyển vị.
-export function inverseMatrixMod26(matrix) {
+export async function inverseMatrixMod26(matrix) {
     const n = matrix.length;
     const det = determinantMod26(matrix);
     const detInverse = modInverse(det, 26);

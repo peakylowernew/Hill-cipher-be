@@ -138,12 +138,20 @@ export function decryptText(text, keyMatrix) {
     }
 
     // Tính ma trận nghịch đảo của khóa sử dụng các hàm đã có
-    const inverseKeyMatrix = inverseMatrixMod26(keyMatrix);
+    let inverseKeyMatrix;
 
-    if (!inverseKeyMatrix) {``
-        throw new Error("Ma trận khóa không khả nghịch!");
+    try {
+        inverseKeyMatrix = inverseMatrixMod26(keyMatrix);
+    } catch (err) {
+        console.error("Lỗi tính nghịch đảo:", err.message);
+        return { error: "Không thể tính nghịch đảo của ma trận khóa. Đảm bảo ma trận khả nghịch trong modulo 26." };
     }
 
+    if (!inverseKeyMatrix) {
+        return { error: "Ma trận khóa không khả nghịch!" };
+    }
+
+    
     let textVector = text.toUpperCase().split("").map(ch => ch.charCodeAt(0) - 65);
     let decryptedVector = [];
     let steps = [];

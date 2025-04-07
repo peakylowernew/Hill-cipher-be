@@ -37,20 +37,23 @@ export function decrypt(req, res) {
             return res.status(400).json({ error: "Ma trận khóa phải là ma trận vuông." });
         }
 
-        // Bắt đầu giải mã và lưu lại các bước
-        const { decryptedText, steps } = decryptText(text, keyMatrix);
-        
-        // Nếu có lỗi trong quá trình giải mã
-        if (!decryptedText) {
-            return res.status(500).json({ error: "Lỗi giải mã!" });
+        // Gọi hàm giải mã
+        const result = decryptText(text, keyMatrix);
+
+        // Nếu trả về lỗi từ utils/hillcipher.js
+        if (result.error) {
+            return res.status(400).json({ error: result.error });
         }
 
-        res.json({ 
+        const { decryptedText, steps } = result;
+
+        res.json({
             decryptedText,
-            steps // Trả về các bước tính toán chi tiết
+            steps
         });
     } catch (error) {
         console.error("Lỗi giải mã:", error);
-        res.status(500).json({ error: "Lỗi máy chủ!" });
+        res.status(500).json({ error: error.message || "Lỗi máy chủ!" });
     }
 }
+

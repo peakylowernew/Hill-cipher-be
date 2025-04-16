@@ -47,6 +47,7 @@ function transposeMatrix(matrix) {
 function mod26(value) {
     return ((value % 26) + 26) % 26;
 }
+
 // Mã hóa văn bản
 export function encryptText(text, keyMatrix) {
     if (!text || !keyMatrix || !Array.isArray(keyMatrix)) {
@@ -58,13 +59,19 @@ export function encryptText(text, keyMatrix) {
         throw new Error("Ma trận khóa không hợp lệ! Phải là ma trận vuông.");
     }
 
+    // Kiểm tra khả nghịch của ma trận khóa
+    const inverseKeyMatrix = inverseMatrixMod26(keyMatrix);
+    if (!inverseKeyMatrix) {
+        return { error: "Ma trận khóa không khả nghịch! Không thể mã hóa văn bản." };
+    }
+
     let textVector = text.toUpperCase().split("").map(ch => ch.charCodeAt(0) - 65);
     while (textVector.length % n !== 0) {
-        textVector.push(23); // Thêm ký tự X (23) vào nếu thiếu để tạo thành khối
+        textVector.push(23); // Thêm ký tự X (23) nếu thiếu
     }
 
     let encryptedVector = [];
-    let steps = [];  // Dùng để lưu các bước mã hóa
+    let steps = [];
     let blocks = [];
 
     // Xuất toàn bộ khối văn bản gốc
@@ -74,7 +81,6 @@ export function encryptText(text, keyMatrix) {
 
         blocks.push({ block, blockChars });
 
-        // Lưu khối văn bản gốc
         steps.push({
             step: `Văn bản: (${blockChars.join("")}) => [${block.join(" | ")}]`,
             block,
@@ -82,15 +88,14 @@ export function encryptText(text, keyMatrix) {
         });
     }
 
-    // Thực hiện mã hóa sau khi xuất toàn bộ khối văn bản
+    // Mã hóa
     for (let { block, blockChars } of blocks) {
         let encryptedBlock = new Array(n).fill(0);
-        let stepDetails = []; // Dùng để lưu từng bước nhân và cộng
+        let stepDetails = [];
         const blockMatrix = [];
 
         blockMatrix.push(`<strong>KHÓA:</strong> [${keyMatrix.join(" | ")}]`);
 
-        // Nhân ma trận khóa với khối văn bản để mã hóa
         for (let row = 0; row < n; row++) {
             let sum = 0;
             let calculationSteps = [];
@@ -101,13 +106,12 @@ export function encryptText(text, keyMatrix) {
                 calculationSteps.push(`(${keyMatrix[row][col]} * ${block[col]})`);
             }
 
-            encryptedBlock[row] = mod26(sum); // Giới hạn trong phạm vi 26 chữ cái
+            encryptedBlock[row] = mod26(sum);
             stepDetails.push(`- <strong>HÀNG ${row + 1}:</strong> ${calculationSteps.join(" + ")} = ${sum} mod 26 = ${encryptedBlock[row]}`);
         }
 
         let encryptedChars = encryptedBlock.map(num => String.fromCharCode(num + 65));
 
-        // Lưu kết quả sau mã hóa
         steps.push({
             key: blockMatrix,
             details: stepDetails,
@@ -125,6 +129,7 @@ export function encryptText(text, keyMatrix) {
         steps
     };
 }
+
 
 // Giải mã văn bản
 export function decryptText(text, keyMatrix) {

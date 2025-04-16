@@ -66,8 +66,12 @@ export function encryptText(text, keyMatrix) {
     }
 
     let textVector = text.toUpperCase().split("").map(ch => ch.charCodeAt(0) - 65);
+    const lastChar = textVector[textVector.length - 1];
+    const originalText = text;  // Lưu lại văn bản gốc mà không thay đổi
+
+    // Thêm các ký tự bổ sung nếu cần để độ dài chia hết cho n
     while (textVector.length % n !== 0) {
-        textVector.push(23); // Thêm ký tự X (23) nếu thiếu
+        textVector.push(lastChar); // Thêm chính ký tự cuối cùng
     }
 
     let encryptedVector = [];
@@ -124,15 +128,16 @@ export function encryptText(text, keyMatrix) {
     }
 
     return {
-        originalText: text,
+        originalText: originalText,  // Lưu lại văn bản gốc
         encryptedText: encryptedVector.map(num => String.fromCharCode(num + 65)).join(""),
+        originalLength: originalText.length, // Lưu độ dài văn bản gốc
+        originalKeyMatrix: keyMatrix.length,
         steps
     };
 }
 
-
 // Giải mã văn bản
-export function decryptText(text, keyMatrix) {
+export function decryptText(text, keyMatrix, originalLength = null) {
     if (!text || !keyMatrix || !Array.isArray(keyMatrix)) {
         throw new Error("Dữ liệu đầu vào không hợp lệ!");
     }
@@ -156,13 +161,12 @@ export function decryptText(text, keyMatrix) {
         return { error: "Ma trận khóa không khả nghịch!" };
     }
 
-    
     let textVector = text.toUpperCase().split("").map(ch => ch.charCodeAt(0) - 65);
     let decryptedVector = [];
     let steps = [];
     let blocks = [];
 
-    // Xuất toàn bộ khối văn bản gốc
+    // Xuất toàn bộ khối văn bản mã hóa
     for (let i = 0; i < textVector.length; i += n) {
         let block = textVector.slice(i, i + n);
         let blockChars = block.map(num => String.fromCharCode(num + 65));
@@ -171,7 +175,7 @@ export function decryptText(text, keyMatrix) {
 
         // Lưu khối văn bản gốc
         steps.push({
-            step: `Văn bản: (${blockChars.join("")}) => [${block.join(" | ")}]`,
+            step: `Mã hóa: (${blockChars.join("")}) => [${block.join(" | ")}]`,
             block,
             blockChars
         });
@@ -196,7 +200,7 @@ export function decryptText(text, keyMatrix) {
                 calculationSteps.push(`(${inverseKeyMatrix[row][col]} * ${block[col]})`);
             }
 
-            decryptedBlock[row] = ((sum % 26) + 26) % 26;
+            decryptedBlock[row] = ((sum % 26) + 26) % 26;  // Đảm bảo giá trị là trong phạm vi mod 26
             stepDetails.push(`- <strong>HÀNG ${row + 1}:</strong> ${calculationSteps.join(" + ")} = ${sum} mod 26 = ${decryptedBlock[row]}`);
         }
 
@@ -214,9 +218,17 @@ export function decryptText(text, keyMatrix) {
         decryptedVector.push(...decryptedBlock);
     }
 
+    // Cắt bỏ ký tự thừa sau khi giải mã
+    let finalText = decryptedVector.map(num => String.fromCharCode(num + 65)).join("");
+
+    // Kiểm tra và loại bỏ các ký tự thừa nếu có
+    if (originalLength !== null && originalLength < finalText.length) {
+        finalText = finalText.slice(0, originalLength); // Cắt văn bản đến độ dài ban đầu
+    }
+
     return {
         originalText: text,
-        decryptedText: decryptedVector.map(num => String.fromCharCode(num + 65)).join(""),
+        decryptedText: finalText,
         steps
     };
 }

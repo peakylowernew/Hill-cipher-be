@@ -1,6 +1,6 @@
 import { determinantMod26, modInverse, inverseMatrixMod26 } from './matrixUtils.js';
 
-// ma hoa
+// Mã hóa văn bản
 export function encryptText(text, keyMatrix) {
     if (!text || !keyMatrix || !Array.isArray(keyMatrix)) {
         throw new Error("Dữ liệu đầu vào không hợp lệ!");
@@ -11,7 +11,14 @@ export function encryptText(text, keyMatrix) {
         throw new Error("Ma trận khóa không hợp lệ! Phải là ma trận vuông.");
     }
 
+    // Kiểm tra khả nghịch của ma trận khóa
+    const inverseKeyMatrix = inverseMatrixMod26(keyMatrix);
+    if (!inverseKeyMatrix) {
+        return { error: "Ma trận khóa không khả nghịch! Không thể mã hóa văn bản." };
+    }
+
     let textVector = text.toUpperCase().split("").map(ch => ch.charCodeAt(0) - 65);
+
     const lastCharValue = textVector.length > 0 ? textVector[textVector.length - 1] : 23; // Dùng ký tự cuối, mặc định X (23) nếu chuỗi rỗng
     while (textVector.length % n !== 0) {
         textVector.push(lastCharValue); // Đệm bằng giá trị số của ký tự cuối
@@ -40,7 +47,6 @@ export function encryptText(text, keyMatrix) {
         let stepDetails = [];
         const blockMatrix = [`<strong>KHÓA:</strong> [${keyMatrix.map(row => row.join(" ")).join(" | ")}]`];
 
-        // Thực hiện phép nhân ma trận
         for (let row = 0; row < n; row++) {
             let sum = 0;
             let calculationSteps = [];
@@ -144,6 +150,7 @@ export function decryptText(text, keyMatrix) {
         }
 
         let decryptedChars = decryptedBlock.map(num => String.fromCharCode(num + 65));
+        // Lưu kết quả giải mã
         steps.push({
             key: blockMatrix,
             details: stepDetails,

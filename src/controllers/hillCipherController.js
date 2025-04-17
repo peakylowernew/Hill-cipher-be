@@ -38,23 +38,23 @@ export function decrypt(req, res) {
         if (!keyMatrix.every(row => row.length === n)) {
             return res.status(400).json({ error: "Ma trận khóa phải là ma trận vuông." });
         }
-
+      
         const processedkeyMatrix = keyStringToMatrix(keyMatrix);
         // Bắt đầu giải mã và lưu lại các bước
         const { decryptedText, steps } = decryptText(text, processedkeyMatrix);
         
         // Nếu có lỗi trong quá trình giải mã
         if (!decryptedText) {
-            return res.status(500).json({ error: "Lỗi giải mã!" });
-        }
+            return res.status(400).json({ error: "Lỗi giải mã!" });
+          }
 
-        res.json({ 
+        res.json({
             decryptedText,
-            steps // Trả về các bước tính toán chi tiết
+            steps
         });
     } catch (error) {
         console.error("Lỗi giải mã:", error);
-        res.status(500).json({ error: "Lỗi máy chủ!" });
+        res.status(500).json({ error: error.message || "Lỗi máy chủ!" });
     }
 }
 
@@ -72,3 +72,4 @@ export function generateMatrix(req, res) {
         res.status(500).json({ error: error.message });
     }
 }
+

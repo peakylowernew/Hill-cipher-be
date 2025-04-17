@@ -1,4 +1,5 @@
 import { encryptText, decryptText } from "../utils/hillCipher.js";
+import { keyStringToMatrix, generateInvertibleMatrix } from "../utils/matrixUtils.js";
 
 export function encrypt(req, res) {
     try {
@@ -13,10 +14,11 @@ export function encrypt(req, res) {
             return res.status(400).json({ error: "Ma trận khóa phải là ma trận vuông." });
         }
 
-        // Gọi hàm mã hóa và lấy các bước
-        const { encryptedText, steps } = encryptText(text, keyMatrix);
 
-        // Trả về cả kết quả mã hóa và các bước mã hóa
+        const processedkeyMatrix = keyStringToMatrix(keyMatrix); // Convert chuỗi key thành ma trận
+
+        const { encryptedText, steps } = encryptText(text, processedkeyMatrix);
+
         res.json({ encryptedText, steps });
     } catch (error) {
         console.error("Lỗi mã hóa:", error);
@@ -37,8 +39,9 @@ export function decrypt(req, res) {
             return res.status(400).json({ error: "Ma trận khóa phải là ma trận vuông." });
         }
 
+        const processedkeyMatrix = keyStringToMatrix(keyMatrix);
         // Bắt đầu giải mã và lưu lại các bước
-        const { decryptedText, steps } = decryptText(text, keyMatrix);
+        const { decryptedText, steps } = decryptText(text, processedkeyMatrix);
         
         // Nếu có lỗi trong quá trình giải mã
         if (!decryptedText) {
@@ -52,5 +55,20 @@ export function decrypt(req, res) {
     } catch (error) {
         console.error("Lỗi giải mã:", error);
         res.status(500).json({ error: "Lỗi máy chủ!" });
+    }
+}
+
+export function generateMatrix(req, res) {
+    const n = parseInt(req.params.size);
+    if (isNaN(n) || n <= 0) {
+        return res.status(400).json({ error: "Kích thước ma trận phải là số nguyên dương!" });
+    }
+
+    try {
+        const result = generateInvertibleMatrix(n);
+        res.json(result);
+    } catch (error) {
+        console.error("Lỗi tạo ma trận:", error);
+        res.status(500).json({ error: error.message });
     }
 }

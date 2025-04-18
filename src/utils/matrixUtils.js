@@ -43,3 +43,49 @@ export async function inverseMatrixMod26(matrix) {
 function transposeMatrix(matrix) {
     return matrix[0].map((_, colIndex) => matrix.map(row => row[colIndex]));
 }
+
+//Chuyển từ chuỗi khóa sang ma trận số
+export function keyStringToMatrix(keyMatrix) {
+    return keyMatrix.map(row =>
+        row.map(value => {
+            if (typeof value === "string") {
+                if (!isNaN(value)) return parseInt(value); // Nếu là số, giữ nguyên
+                const upperChar = value.toUpperCase();
+                return upperChar.charCodeAt(0) - 65; // Chuyển chữ thành số (A=0, B=1, ..., Z=25)
+            }
+            return value;
+        })
+    );
+}
+
+// Hàm tạo ma trận ngẫu nhiên khả nghịch trong modulo 26
+export function generateInvertibleMatrix(n) {
+    if (!Number.isInteger(n) || n <= 0) {
+        throw new Error("Kích thước ma trận phải là số nguyên dương!");
+    }
+
+    const maxAttempts = 100; // Số lần thử tối đa để tạo ma trận khả nghịch
+    let attempts = 0;
+
+    while (attempts < maxAttempts) {
+        // Tạo ma trận ngẫu nhiên n x n với các phần tử trong [0, 25]
+        const matrix = Array.from({ length: n }, () =>
+            Array.from({ length: n }, () => Math.floor(Math.random() * 26))
+        );
+
+        // Tính định thức
+        const det = determinantMod26(matrix);
+        
+        // Kiểm tra tính khả nghịch: det phải có nghịch đảo trong modulo 26
+        const detInverse = modInverse(det, 26);
+        if (detInverse !== null) {
+            return matrix; // Ma trận khả nghịch, trả về
+        }
+
+        attempts++;
+    }
+
+    throw new Error(`Không thể tạo ma trận khả nghịch sau ${maxAttempts} lần thử!`);
+}
+
+

@@ -1,4 +1,5 @@
 import { encryptText, decryptText } from "../utils/hillCipher.js";
+import { keyStringToMatrix, generateInvertibleMatrix } from "../utils/matrixUtils.js";
 
 export function encrypt(req, res) {
     try {
@@ -13,10 +14,11 @@ export function encrypt(req, res) {
             return res.status(400).json({ error: "Ma trận khóa phải là ma trận vuông." });
         }
 
-        // Gọi hàm mã hóa và lấy các bước
-        const { encryptedText, steps } = encryptText(text, keyMatrix);
 
-        // Trả về cả kết quả mã hóa và các bước mã hóa
+        const processedkeyMatrix = keyStringToMatrix(keyMatrix); // Convert chuỗi key thành ma trận
+
+        const { encryptedText, steps } = encryptText(text, processedkeyMatrix);
+
         res.json({ encryptedText, steps });
     } catch (error) {
         console.error("Lỗi mã hóa:", error);
@@ -36,16 +38,15 @@ export function decrypt(req, res) {
         if (!keyMatrix.every(row => row.length === n)) {
             return res.status(400).json({ error: "Ma trận khóa phải là ma trận vuông." });
         }
-
-        // Gọi hàm giải mã
-        const result = decryptText(text, keyMatrix);
-
-        // Nếu trả về lỗi từ utils/hillcipher.js
-        if (result.error) {
-            return res.status(400).json({ error: result.error });
-        }
-
-        const { decryptedText, steps } = result;
+      
+        const processedkeyMatrix = keyStringToMatrix(keyMatrix);
+        // Bắt đầu giải mã và lưu lại các bước
+        const { decryptedText, steps } = decryptText(text, processedkeyMatrix);
+        
+        // Nếu có lỗi trong quá trình giải mã
+        if (!decryptedText) {
+            return res.status(400).json({ error: "Lỗi giải mã!" });
+          }
 
         res.json({
             decryptedText,
@@ -54,6 +55,21 @@ export function decrypt(req, res) {
     } catch (error) {
         console.error("Lỗi giải mã:", error);
         res.status(500).json({ error: error.message || "Lỗi máy chủ!" });
+    }
+}
+
+export function generateMatrix(req, res) {
+    const n = parseInt(req.params.size);
+    if (isNaN(n) || n <= 0) {
+        return res.status(400).json({ error: "Kích thước ma trận phải là số nguyên dương!" });
+    }
+
+    try {
+        const result = generateInvertibleMatrix(n);
+        res.json(result);
+    } catch (error) {
+        console.error("Lỗi tạo ma trận:", error);
+        res.status(500).json({ error: error.message });
     }
 }
 

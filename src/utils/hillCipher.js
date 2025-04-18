@@ -67,7 +67,7 @@ export function encryptText(text, keyMatrix) {
 
     let textVector = text.toUpperCase().split("").map(ch => ch.charCodeAt(0) - 65);
     const lastChar = textVector[textVector.length - 1];
-    const originalText = text;  // Lưu lại văn bản gốc mà không thay đổi
+    // const originalText = text;  // Lưu lại văn bản gốc mà không thay đổi
 
     // Thêm các ký tự bổ sung nếu cần để độ dài chia hết cho n
     while (textVector.length % n !== 0) {
@@ -128,10 +128,10 @@ export function encryptText(text, keyMatrix) {
     }
 
     return {
-        originalText: originalText,  // Lưu lại văn bản gốc
+        // originalText: originalText,  // Lưu lại văn bản gốc
+        // originalLength: originalText.length, // Lưu độ dài văn bản gốc
+        // originalKeyMatrix: keyMatrix.length,
         encryptedText: encryptedVector.map(num => String.fromCharCode(num + 65)).join(""),
-        originalLength: originalText.length, // Lưu độ dài văn bản gốc
-        originalKeyMatrix: keyMatrix.length,
         steps
     };
 }

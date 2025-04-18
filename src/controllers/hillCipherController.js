@@ -69,7 +69,7 @@ export function generateMatrix(req, res) {
         res.json(result);
     } catch (error) {
         console.error("Lỗi tạo ma trận:", error);
-        res.status(500).json({ error: error.message });
+        res.status(400).json({ error: error.message });
     }
 }
 

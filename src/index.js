@@ -5,7 +5,12 @@ import authRoutes from "./routes/authRoutes.js";
 import historyRoutes from "./routes/historyRoutes.js";
 
 const app = express();
-app.use(cors());
+const corsOptions = {
+    origin: "*",  // Cho phép tất cả các domain (có thể thay bằng domain cụ thể của frontend)
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  };
+app.use(cors(corsOptions));
 app.use(express.json());
 
 app.use("/api/hill", hillCipherRoutes);

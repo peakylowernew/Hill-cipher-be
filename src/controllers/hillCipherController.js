@@ -1,9 +1,12 @@
 import { encryptText, decryptText } from "../utils/hillCipher.js";
 import { keyStringToMatrix, generateInvertibleMatrix } from "../utils/matrixUtils.js";
+import { addUserHistory } from "../utils/createDatabase.js";
 
-export function encrypt(req, res) {
+export async function encrypt(req, res) {
     try {
-        const { text, keyMatrix } = req.body;
+        const { text, keyMatrix, userId } = req.body;
+
+        console.log("Received Data encrypt:", { text, keyMatrix, userId });
 
         if (!text || !keyMatrix || !Array.isArray(keyMatrix)) {
             return res.status(400).json({ error: "Thiếu dữ liệu hoặc keyMatrix không hợp lệ!" });
@@ -14,10 +17,27 @@ export function encrypt(req, res) {
             return res.status(400).json({ error: "Ma trận khóa phải là ma trận vuông." });
         }
 
-
-        const processedkeyMatrix = keyStringToMatrix(keyMatrix); // Convert chuỗi key thành ma trận
+        const processedkeyMatrix = keyStringToMatrix(keyMatrix);
 
         const { encryptedText, steps } = encryptText(text, processedkeyMatrix);
+
+        // 🧠 Lưu lịch sử nếu có userId
+        if (
+            userId &&
+            typeof text === 'string' && text.trim() !== '' &&
+            Array.isArray(keyMatrix) && keyMatrix.length > 0 &&
+            encryptedText
+        ) {
+            await addUserHistory(userId, {
+                userId,
+                tool: "Hill Cipher",
+                action: "encrypt",
+                input: text,
+                output: encryptedText,
+                steps: steps.map(step => JSON.stringify(step)),
+                key: keyMatrix.toString(),
+            });
+        }
 
         res.json({ encryptedText, steps });
     } catch (error) {
@@ -26,9 +46,11 @@ export function encrypt(req, res) {
     }
 }
 
-export function decrypt(req, res) {
+export async function decrypt(req, res) {
     try {
-        const { text, keyMatrix } = req.body;
+        const { text, keyMatrix, userId } = req.body;
+        
+        console.log("Received Data decrypt:", { text, keyMatrix, userId });
 
         if (!text || !keyMatrix || !Array.isArray(keyMatrix)) {
             return res.status(400).json({ error: "Thiếu dữ liệu hoặc keyMatrix không hợp lệ!" });
@@ -38,20 +60,28 @@ export function decrypt(req, res) {
         if (!keyMatrix.every(row => row.length === n)) {
             return res.status(400).json({ error: "Ma trận khóa phải là ma trận vuông." });
         }
-      
+
         const processedkeyMatrix = keyStringToMatrix(keyMatrix);
-        // Bắt đầu giải mã và lưu lại các bước
         const { decryptedText, steps } = decryptText(text, processedkeyMatrix);
-        
-        // Nếu có lỗi trong quá trình giải mã
+
         if (!decryptedText) {
             return res.status(400).json({ error: "Lỗi giải mã!" });
-          }
+        }
 
-        res.json({
-            decryptedText,
-            steps
-        });
+        // 🧠 Lưu lịch sử nếu có userId
+        if (userId && text.trim() && decryptedText.trim()) {
+            await addUserHistory(userId, {
+                userId,
+                tool: "Hill Cipher",
+                action: "decrypt",
+                input: text,
+                output: decryptedText,
+                steps: steps.map(step => JSON.stringify(step)),
+                key: keyMatrix.toString(),
+            });
+        }
+
+        res.json({ decryptedText, steps });
     } catch (error) {
         console.error("Lỗi giải mã:", error);
         res.status(500).json({ error: error.message || "Lỗi máy chủ!" });

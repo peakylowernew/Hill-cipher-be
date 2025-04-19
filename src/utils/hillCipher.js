@@ -111,7 +111,7 @@ export function decryptText(text, keyMatrix) {
         return { decryptedText: null, steps };
     }
 
-    steps.push(`Ma trận nghịch đảo: [${inverseMatrix.map(row => row.join(" ")).join(" | ")}]`);
+    // steps.push(`Ma trận nghịch đảo: [${inverseMatrix.map(row => row.join(" ")).join(" | ")}]`);
 
     // Chuẩn bị vector văn bản mã hóa
     let textVector = text.toUpperCase().split("").map(ch => ch.charCodeAt(0) - 65);

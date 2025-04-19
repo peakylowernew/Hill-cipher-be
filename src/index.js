@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import hillCipherRoutes from "./routes/hillCipherRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
+import historyRoutes from "./routes/historyRoutes.js";
 
 const app = express();
 app.use(cors());
@@ -9,6 +10,7 @@ app.use(express.json());
 
 app.use("/api/hill", hillCipherRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/history", historyRoutes);
 app.post("/api/hill/decrypt", (req, res) => {
     console.log("Nhận request từ frontend:", req.body);
 

@@ -14,22 +14,14 @@ const serviceAccount = {
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
+    ignoreUndefinedProperties: true
   });
 } else {
   console.log("Firebase đã được khởi tạo.");
 }
 
-// Kiểm tra kết nối Firebase
-export async function checkFirebaseConnection() {
-    try {
-      const appInfo = await admin.app().name;
-      console.log(`Firebase đã kết nối: ${appInfo}`);
-    } catch (error) {
-      console.error("Không thể kết nối đến Firebase:", error);
-      throw new Error("Kết nối Firebase không thành công.");
-    }
-}  
+// Khởi tạo Firestore
+const db = admin.firestore();
+const auth = admin.auth();
 
-checkFirebaseConnection();
-
-export default admin;
+export { admin, db, auth };

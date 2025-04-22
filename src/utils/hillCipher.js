@@ -72,9 +72,11 @@ export function encryptText(text, keyMatrix) {
 
         encryptedVector.push(...encryptedBlock);
     }
+    console.log("keyMatrix:", keyMatrix);
 
     return {
         encryptedText: encryptedVector.map(num => String.fromCharCode(num + 65)).join(""),
+        keyMatrix: keyMatrix,
         steps
     };
 }
@@ -110,7 +112,7 @@ export function decryptText(text, keyMatrix) {
         steps.push("Không thể tính nghịch đảo của ma trận!");
         return { decryptedText: null, steps };
     }
-
+    console.log("khoa nghich:", inverseMatrix);
     // steps.push(`Ma trận nghịch đảo: [${inverseMatrix.map(row => row.join(" ")).join(" | ")}]`);
 
     // Chuẩn bị vector văn bản mã hóa
@@ -150,7 +152,6 @@ export function decryptText(text, keyMatrix) {
         }
 
         let decryptedChars = decryptedBlock.map(num => String.fromCharCode(num + 65));
-        // Lưu kết quả giải mã
         steps.push({
             key: blockMatrix,
             details: stepDetails,
@@ -183,6 +184,7 @@ export function decryptText(text, keyMatrix) {
 
     return {
         decryptedText,
+        inverseMatrix,
         steps
     };
 }

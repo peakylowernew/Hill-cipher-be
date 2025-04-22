@@ -62,7 +62,7 @@ export async function decrypt(req, res) {
         }
 
         const processedkeyMatrix = keyStringToMatrix(keyMatrix);
-        const { decryptedText, steps } = decryptText(text, processedkeyMatrix);
+        const { decryptedText,inverseMatrix, steps } = decryptText(text, processedkeyMatrix);
 
         if (!decryptedText) {
             return res.status(400).json({ error: "Lỗi giải mã!" });
@@ -81,7 +81,7 @@ export async function decrypt(req, res) {
             });
         }
 
-        res.json({ decryptedText, steps });
+        res.json({ decryptedText,inverseMatrix, steps });
     } catch (error) {
         console.error("Lỗi giải mã:", error);
         res.status(500).json({ error: error.message || "Lỗi máy chủ!" });

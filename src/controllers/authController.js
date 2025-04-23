@@ -2,7 +2,7 @@ import { auth, db } from "../config/firebase.js";  // Firebase Admin SDK
 import { createUser, addUserHistory } from "../utils/createDatabase.js";
 import bcrypt from 'bcryptjs';
 import jwt from "jsonwebtoken"; //Tạo token bằng jsonwebtoken để tự encode thông tin (ví dụ: uid, email, name…).
-
+// lấy uid từ firestore
 export const getUserById = async (req, res) => {
   const { uid } = req.params;
   try {
@@ -80,7 +80,8 @@ export const login = async (req, res) => {
     if (!isPasswordValid) {
       return res.status(401).json({ message: "Mật khẩu không chính xác" });
     }
-
+    // uid	ID người dùng duy nhất (Firebase cấp)	Từ auth.getUserByEmail()
+    // token	Chuỗi JWT chứa uid và email, xác thực người dùng trên client	Sinh từ jwt.sign()
     const payload = {
       uid: user.uid,
       email: user.email,

@@ -62,6 +62,7 @@ export async function decrypt(req, res) {
         }
 
         const processedkeyMatrix = keyStringToMatrix(keyMatrix);
+        // trả về các bước và khóa nghịch đảo
         const { decryptedText,inverseMatrix, steps } = decryptText(text, processedkeyMatrix);
 
         if (!decryptedText) {

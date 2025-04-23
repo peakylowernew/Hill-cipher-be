@@ -76,7 +76,6 @@ export function encryptText(text, keyMatrix) {
 
     return {
         encryptedText: encryptedVector.map(num => String.fromCharCode(num + 65)).join(""),
-        keyMatrix: keyMatrix,
         steps
     };
 }
@@ -184,7 +183,7 @@ export function decryptText(text, keyMatrix) {
 
     return {
         decryptedText,
-        inverseMatrix,
+        inverseMatrix, // trả về khóa nghịch đảo 
         steps
     };
 }

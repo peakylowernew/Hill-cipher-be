@@ -1,10 +1,13 @@
 import { determinantMod26, modInverse, inverseMatrixMod26 } from './matrixUtils.js';
-
+import { removeAccents, restoreAccents } from './accentUtils.js';
 // Mã hóa văn bản
 export function encryptText(text, keyMatrix) {
     if (!text || !keyMatrix || !Array.isArray(keyMatrix)) {
         throw new Error("Dữ liệu đầu vào không hợp lệ!");
     }
+    // xử lý chuôi tiếng việt
+    const originalText = text; // Lưu lại bản gốc có dấu
+    text = removeAccents(text); // Bỏ dấu để mã hóa
 
     const n = keyMatrix.length;
     if (keyMatrix.some(row => row.length !== n)) {
@@ -76,12 +79,13 @@ export function encryptText(text, keyMatrix) {
 
     return {
         encryptedText: encryptedVector.map(num => String.fromCharCode(num + 65)).join(""),
-        steps
+        steps,
+        originalText //luu ban ro (co dau)
     };
 }
 
 //giai ma
-export function decryptText(text, keyMatrix) {
+export function decryptText(text, keyMatrix, originalText = null) { // ✨ Thêm originalText
     if (!text || !keyMatrix || !Array.isArray(keyMatrix)) {
         throw new Error("Dữ liệu đầu vào không hợp lệ!");
     }
@@ -111,8 +115,7 @@ export function decryptText(text, keyMatrix) {
         steps.push("Không thể tính nghịch đảo của ma trận!");
         return { decryptedText: null, steps };
     }
-    console.log("khoa nghich:", inverseMatrix);
-    // steps.push(`Ma trận nghịch đảo: [${inverseMatrix.map(row => row.join(" ")).join(" | ")}]`);
+    console.log("Khóa nghịch:", inverseMatrix);
 
     // Chuẩn bị vector văn bản mã hóa
     let textVector = text.toUpperCase().split("").map(ch => ch.charCodeAt(0) - 65);
@@ -161,25 +164,34 @@ export function decryptText(text, keyMatrix) {
 
         decryptedVector.push(...decryptedBlock);
     }
+
     let decryptedText = decryptedVector.map(num => String.fromCharCode(num + 65)).join("");
-    steps.push(`Chuỗi giải mã đầy đủ: ${decryptedText}`);
-        // Cắt bỏ ký tự đệm 
-        let paddingCount = 0;
-        const maxPadding = n - 1; // Số ký tự đệm tối đa là n-1
-        for (let i = decryptedText.length - 1; i > 0 && paddingCount < maxPadding; i--) {
-            if (decryptedText[i] === decryptedText[i - 1]) {
-                paddingCount++;
-            } else {
-                break;
-            }
-        }
-    
-        if (paddingCount > 0) {
-            decryptedText = decryptedText.slice(0, decryptedText.length - paddingCount);
-            steps.push(`Đã cắt bỏ ${paddingCount} ký tự đệm ở cuối (các ký tự giống nhau): ${decryptedText}`);
+    steps.push(`Chuỗi giải mã đầy đủ (không dấu): ${decryptedText}`);
+
+    // Cắt bỏ ký tự đệm
+    let paddingCount = 0;
+    const maxPadding = n - 1;
+    for (let i = decryptedText.length - 1; i > 0 && paddingCount < maxPadding; i--) {
+        if (decryptedText[i] === decryptedText[i - 1]) {
+            paddingCount++;
         } else {
-            steps.push("Không phát hiện ký tự đệm (không có ký tự giống nhau ở cuối).");
-        }    
+            break;
+        }
+    }
+
+    if (paddingCount > 0) {
+        decryptedText = decryptedText.slice(0, decryptedText.length - paddingCount);
+        steps.push(`Đã cắt bỏ ${paddingCount} ký tự đệm ở cuối: ${decryptedText}`);
+    } else {
+        steps.push("Không phát hiện ký tự đệm ở cuối.");
+    }
+
+    // ✨✨ GHÉP LẠI DẤU nếu có originalText
+    if (originalText) {
+        const restoredText = restoreAccents(decryptedText, originalText);
+        steps.push(`Chuỗi sau khi ghép lại dấu: ${restoredText}`);
+        decryptedText = restoredText;
+    }
 
     return {
         decryptedText,

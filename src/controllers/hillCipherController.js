@@ -18,8 +18,7 @@ export async function encrypt(req, res) {
         }
 
         const processedkeyMatrix = keyStringToMatrix(keyMatrix);
-
-        const { encryptedText, steps } = encryptText(text, processedkeyMatrix);
+        const { encryptedText, steps, originalText } = encryptText(text, processedkeyMatrix);
 
         // 🧠 Lưu lịch sử nếu có userId
         if (
@@ -37,9 +36,9 @@ export async function encrypt(req, res) {
                 steps: steps.map(step => JSON.stringify(step)),
                 key: keyMatrix.toString(),
             });
-        }
+        }   
 
-        res.json({ encryptedText, steps });
+        res.json({ encryptedText, steps, originalText });
     } catch (error) {
         console.error("Lỗi mã hóa:", error);
         res.status(500).json({ error: "Lỗi máy chủ!" });
@@ -48,11 +47,11 @@ export async function encrypt(req, res) {
 
 export async function decrypt(req, res) {
     try {
-        const { text, keyMatrix, userId } = req.body;
+        const { text, keyMatrix, userId, originalText  } = req.body;
         
-        console.log("Received Data decrypt:", { text, keyMatrix, userId });
+        console.log("Received Data decrypt:", { text, keyMatrix, userId, originalText });
 
-        if (!text || !keyMatrix || !Array.isArray(keyMatrix)) {
+        if (!text || !keyMatrix || !Array.isArray(keyMatrix) || !originalText) {
             return res.status(400).json({ error: "Thiếu dữ liệu hoặc keyMatrix không hợp lệ!" });
         }
 
@@ -63,8 +62,8 @@ export async function decrypt(req, res) {
 
         const processedkeyMatrix = keyStringToMatrix(keyMatrix);
         // trả về các bước và khóa nghịch đảo
-        const { decryptedText,inverseMatrix, steps } = decryptText(text, processedkeyMatrix);
-
+        const { decryptedText,inverseMatrix, steps } = decryptText(text, processedkeyMatrix, originalText);
+      
         if (!decryptedText) {
             return res.status(400).json({ error: "Lỗi giải mã!" });
         }

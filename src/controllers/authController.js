@@ -1,7 +1,59 @@
 import { auth, db } from "../config/firebase.js";  // Firebase Admin SDK
 import { createUser, addUserHistory } from "../utils/createDatabase.js";
 import bcrypt from 'bcryptjs';
+import { OAuth2Client } from "google-auth-library";
 import jwt from "jsonwebtoken"; //Tạo token bằng jsonwebtoken để tự encode thông tin (ví dụ: uid, email, name…).
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+export const googleLogin = async (req, res) => {
+  const { idToken } = req.body;  // idToken gửi từ frontend qua POST request
+
+  if (!idToken) {
+    return res.status(400).json({ message: "Token không hợp lệ" });
+  }
+
+  try {
+    // Xác thực token với Google
+    const ticket = await client.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_CLIENT_ID,  // Sử dụng Client ID của bạn từ Google Cloud Console
+    });
+
+    const payload = ticket.getPayload();  // Lấy thông tin người dùng từ payload của token
+    const { sub, email, name, picture } = payload;  // sub là ID người dùng Google (uid)
+
+    // Kiểm tra xem người dùng đã tồn tại trong cơ sở dữ liệu hay chưa
+    let userDoc = await db.collection("users").doc(sub).get();
+
+    if (!userDoc.exists) {
+      // Nếu chưa có người dùng, tạo mới người dùng trong cơ sở dữ liệu
+      const newUser = {
+        id: sub,
+        email,
+        name,
+        avatar: picture || "",  // Nếu có ảnh đại diện, sử dụng ảnh của Google
+        password: null,  // Google login không sử dụng mật khẩu
+      };
+
+      await createUser(newUser); // Lưu thông tin người dùng vào Firebase Firestore
+      userDoc = { data: () => newUser };  // Tạo đối tượng giả để mô phỏng kết quả từ Firestore
+    }
+
+    // Tạo JWT cho người dùng đã đăng nhập
+    const token = jwt.sign({
+      uid: sub,
+      email,
+      name,
+    }, process.env.JWT_SECRET, { expiresIn: "2h" });
+
+    res.status(200).json({ message: "Đăng nhập Google thành công", token, uid: sub });
+  } catch (err) {
+    console.error("Lỗi khi đăng nhập Google:", err);
+    res.status(500).json({ message: "Lỗi khi xác thực Google", error: err.message });
+  }
+};
+
 // lấy uid từ firestore
 export const getUserById = async (req, res) => {
   const { uid } = req.params;

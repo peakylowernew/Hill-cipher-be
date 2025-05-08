@@ -12,7 +12,13 @@ const corsOptions = {
   };
 app.use(cors(corsOptions));
 app.use(express.json());
-
+// Thêm Cross-Origin-Opener-Policy (COOP) và Cross-Origin-Embedder-Policy (COEP) header
+app.use((req, res, next) => {
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+    res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');  // Thêm để hỗ trợ COEP
+    next();
+  });
+  
 app.use("/api/hill", hillCipherRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/history", historyRoutes);

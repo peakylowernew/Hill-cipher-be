@@ -2,8 +2,14 @@ import { determinantMod26, modInverse, inverseMatrixMod26 } from './matrixUtils.
 import { removeAccents, restoreAccents } from './accentUtils.js';
 // Mã hóa văn bản
 export function encryptText(text, keyMatrix) {
-    if (!text || !keyMatrix || !Array.isArray(keyMatrix)) {
-        throw new Error("Dữ liệu đầu vào không hợp lệ!");
+    if (!text) {
+        throw new Error("vui lòng nhập bản rõ");
+    }
+     if (!keyMatrix) {
+        throw new Error("vui lòng nhập Khóa");
+    }
+      if (!Array.isArray(keyMatrix)) {
+        throw new Error("Khóa không hợp lệ");
     }
     // xử lý chuôi tiếng việt
     const originalText = text; // Lưu lại bản gốc có dấu
@@ -17,7 +23,7 @@ export function encryptText(text, keyMatrix) {
     // Kiểm tra khả nghịch của ma trận khóa
     const inverseKeyMatrix = inverseMatrixMod26(keyMatrix);
     if (!inverseKeyMatrix) {
-        return { error: "Ma trận khóa không khả nghịch! Không thể mã hóa văn bản." };
+        throw new Error("Ma trận khóa không khả nghịch! Không thể mã hóa văn bản.");
     }
 
     let textVector = text.toUpperCase().split("").map(ch => ch.charCodeAt(0) - 65);
@@ -113,7 +119,7 @@ export function decryptText(text, keyMatrix, originalText = null) { // ✨ Thêm
     const inverseMatrix = inverseMatrixMod26(keyMatrix, detInverse);
     if (!inverseMatrix) {
         steps.push("Không thể tính nghịch đảo của ma trận!");
-        return { decryptedText: null, steps };
+        return { decryptedText: null, steps, error: "Ma trận khóa không khả nghịch!"};
     }
     console.log("Khóa nghịch:", inverseMatrix);
 

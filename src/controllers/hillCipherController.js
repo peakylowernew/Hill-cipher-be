@@ -41,7 +41,7 @@ export async function encrypt(req, res) {
         res.json({ encryptedText, steps, originalText });
     } catch (error) {
         console.error("Lỗi mã hóa:", error);
-        res.status(500).json({ error: "Lỗi máy chủ!" });
+        res.status(500).json({ error: "Lỗi máy chủ1!" });
     }
 }
 
@@ -51,7 +51,7 @@ export async function decrypt(req, res) {
         
         console.log("Received Data decrypt:", { text, keyMatrix, userId, originalText });
 
-        if (!text || !keyMatrix || !Array.isArray(keyMatrix) || !originalText) {
+        if (!text || !keyMatrix || !Array.isArray(keyMatrix)) {
             return res.status(400).json({ error: "Thiếu dữ liệu hoặc keyMatrix không hợp lệ!" });
         }
 
@@ -63,9 +63,13 @@ export async function decrypt(req, res) {
         const processedkeyMatrix = keyStringToMatrix(keyMatrix);
         // trả về các bước và khóa nghịch đảo
         const { decryptedText,inverseMatrix, steps } = decryptText(text, processedkeyMatrix, originalText);
-      
+        
+        if (error) {
+            return res.status(400).json({ error });
+        }
+        
         if (!decryptedText) {
-            return res.status(400).json({ error: "Lỗi giải mã!" });
+            return res.status(400).json({error: error.message || "Lỗi giải mã!" });
         }
 
         // 🧠 Lưu lịch sử nếu có userId

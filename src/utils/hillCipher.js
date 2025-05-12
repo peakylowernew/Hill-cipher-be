@@ -91,7 +91,7 @@ export function encryptText(text, keyMatrix) {
 }
 
 //giai ma
-export function decryptText(text, keyMatrix, originalText = null) { // ✨ Thêm originalText
+export function decryptText(text, keyMatrix, originalText = null) {
     if (!text || !keyMatrix || !Array.isArray(keyMatrix)) {
         throw new Error("Dữ liệu đầu vào không hợp lệ!");
     }

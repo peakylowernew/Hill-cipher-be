@@ -64,10 +64,6 @@ export async function decrypt(req, res) {
         // trả về các bước và khóa nghịch đảo
         const { decryptedText,inverseMatrix, steps } = decryptText(text, processedkeyMatrix, originalText);
         
-        if (error) {
-            return res.status(400).json({ error });
-        }
-        
         if (!decryptedText) {
             return res.status(400).json({error: error.message || "Lỗi giải mã!" });
         }

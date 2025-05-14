@@ -146,3 +146,25 @@ export const login = async (req, res) => {
     res.status(401).json({ message: "Đăng nhập thất bại", error: error.message });
   }
 };
+
+// cập nhận profile
+export const updateUserById = async (req, res) => {
+  const { uid } = req.params;
+  const { name, avatar } = req.body;
+
+  try {
+    const userRef = db.collection("users").doc(uid);
+
+    const userDoc = await userRef.get();
+    if (!userDoc.exists) {
+      return res.status(404).json({ message: "Người dùng không tồn tại." });
+    }
+
+    await userRef.update({ name, avatar });
+
+    res.status(200).json({ message: "Cập nhật thành công." });
+  } catch (error) {
+    console.error("Lỗi khi cập nhật người dùng:", error);
+    res.status(500).json({ message: "Lỗi server." });
+  }
+};

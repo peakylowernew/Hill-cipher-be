@@ -191,8 +191,7 @@ export function decryptText(text, keyMatrix, originalText = null) {
     } else {
         steps.push("Không phát hiện ký tự đệm ở cuối.");
     }
-// sau khi giải mã thì ra decryptedText=BUON và originalText= buồnbuồn
-    // ✨✨ GHÉP LẠI DẤU nếu có originalText
+
     if (originalText) {
         const restoredText = restoreAccents(decryptedText, originalText);
         steps.push(`Chuỗi sau khi ghép lại dấu: ${restoredText}`);
@@ -201,7 +200,7 @@ export function decryptText(text, keyMatrix, originalText = null) {
 
     return {
         decryptedText,
-        inverseMatrix, // trả về khóa nghịch đảo 
+        inverseMatrix,
         steps
     };
 }

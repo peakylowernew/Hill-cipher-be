@@ -1,0 +1,10 @@
+I0517 19:09:19.950357     984 load.go:37] Reloading schema and connectors...
+I0517 19:09:19.989474     984 control.go:73] [/emulator/backend 5ba1] UpdateResources(): done
+Schema: sources: schema\schema.gql [2140B] 
+Connector "default": sources: connector\mutations.gql [1266B] connector\queries.gql [1880B] 
+I0517 19:09:20.026853     984 codegen.go:82] [connector "default" javascriptSdk] Generating sources into "C:\\Nam4\\DOAN_HILL\\Hill-cipher-be\\dataconnect-generated\\js\\default-connector"
+I0517 19:09:20.035275     984 collector.go:107] schema extensions wrote into "C:\\Nam4\\DOAN_HILL\\Hill-cipher-be\\dataconnect\\.dataconnect\\schema"
+Generated sources: prelude.gql [71531B] 
+I0517 19:09:20.040270     984 collector.go:107] connector "default" javascriptSdk wrote into "C:\\Nam4\\DOAN_HILL\\Hill-cipher-be\\dataconnect-generated\\js\\default-connector"
+Generated sources: index.d.ts [246B] esm\index.esm.js [110B] esm\package.json [17B] index.cjs.js [145B] package.json [634B] README.md [2774B] 
+I0517 19:09:20.059830     984 installsdk.go:80] Running command: C:\Program Files\nodejs\npm.cmd install file:dataconnect-generated\js\default-connector

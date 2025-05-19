@@ -1,5 +1,5 @@
 import { encryptText, decryptText } from "../utils/hillCipher.js";
-import { keyStringToMatrix, generateInvertibleMatrix } from "../utils/matrixUtils.js";
+import { inverseMatrixMod26, keyStringToMatrix, generateInvertibleMatrix } from "../utils/matrixUtils.js";
 import { addUserHistory } from "../utils/createDatabase.js";
 
 export async function encrypt(req, res) {
@@ -41,7 +41,7 @@ export async function encrypt(req, res) {
         res.json({ encryptedText, steps, originalText });
     } catch (error) {
         console.error("Lỗi mã hóa:", error);
-        res.status(500).json({ error: "Lỗi máy chủ1!" });
+        res.status(500).json({ error: error.message || "Lỗi máy chủ!" });
     }
 }
 
@@ -49,6 +49,9 @@ export async function decrypt(req, res) {
     try {
         const { text, keyMatrix, userId, originalText  } = req.body;
         
+        const inverse = inverseMatrixMod26(keyMatrix); // Hàm này nên ném lỗi nếu khóa không khả nghịch
+        if (!inverse) throw new Error("Ma trận khóa không khả nghịch! Không thể giải mã.");
+
         console.log("Received Data decrypt:", { text, keyMatrix, userId, originalText });
 
         if (!text || !keyMatrix || !Array.isArray(keyMatrix)) {
@@ -60,12 +63,17 @@ export async function decrypt(req, res) {
             return res.status(400).json({ error: "Ma trận khóa phải là ma trận vuông." });
         }
 
+        let decryptedText, inverseMatrix, steps;
         const processedkeyMatrix = keyStringToMatrix(keyMatrix);
-        // trả về các bước và khóa nghịch đảo
-        const { decryptedText,inverseMatrix, steps } = decryptText(text, processedkeyMatrix, originalText);
+        
+        try {
+            ({ decryptedText, inverseMatrix, steps } = decryptText(text, processedkeyMatrix, originalText));
+        } catch (innerErr) {
+            return res.status(400).json({ error: innerErr.message || "Lỗi khi giải mã!" });
+        }
         
         if (!decryptedText) {
-            return res.status(400).json({error: error.message || "Lỗi giải mã!" });
+            return res.status(400).json({error: "Lỗi giải mã!" });
         }
 
         // 🧠 Lưu lịch sử nếu có userId
